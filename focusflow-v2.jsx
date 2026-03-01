@@ -3,9 +3,10 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 // ═══════════════════════════════════════════════════════════════════════════
 // API + HAPTICS CONFIG
 // ═══════════════════════════════════════════════════════════════════════════
-const API_URL = window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost"
-  ? "/api/claude"
-  : "https://focusflow-proxy.ananthrao.workers.dev";
+// In Capacitor iOS, hostname is "localhost" but protocol is "capacitor:"
+// Only use the dev proxy when running on http://localhost (Vite dev server)
+const isDev = window.location.protocol === "http:" && (window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost");
+const API_URL = isDev ? "/api/claude" : "https://focusflow-proxy.ananthrao.workers.dev";
 
 const haptic = (style = "LIGHT") => {
   try {
