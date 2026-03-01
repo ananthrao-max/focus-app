@@ -27,9 +27,11 @@ workflows:
         script: keychain initialize
       - name: Fetch signing files
         script: |
+          openssl genrsa -out /tmp/cert_key.pem 2048
           app-store-connect fetch-signing-files "app.getkeel" \
             --type IOS_APP_STORE \
-            --create
+            --create \
+            --certificate-key /tmp/cert_key.pem
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Build iOS app
