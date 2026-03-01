@@ -38,7 +38,14 @@ workflows:
         script: |
           xcode-project build-ipa \
             --workspace "ios/App/App.xcworkspace" \
-            --scheme "App"
+            --scheme "App" 2>&1 || {
+            echo "=== XCODE BUILD LOGS ==="
+            if ls /tmp/xcodebuild_logs/*.log 1>/dev/null 2>&1; then
+              cat /tmp/xcodebuild_logs/*.log | tail -200
+            fi
+            echo "=== END LOGS ==="
+            exit 1
+          }
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
