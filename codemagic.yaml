@@ -36,27 +36,62 @@ workflows:
         script: xcode-project use-profiles
       - name: Build iOS app
         script: |
-          echo "=== DEBUG: CODE_SIGN_IDENTITY in project before fix ==="
-          grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-          echo "=== DEBUG: Keychain certificates ==="
-          security find-identity -v -p codesigning
-          echo "=== DEBUG: Provisioning profiles ==="
-          ls ~/Library/MobileDevice/Provisioning\ Profiles/ || true
-          echo "=== Forcing ALL CODE_SIGN_IDENTITY to Apple Distribution ==="
-          sed -i '' 's/CODE_SIGN_IDENTITY = "[^"]*"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/App/App.xcodeproj/project.pbxproj
-          echo "=== DEBUG: CODE_SIGN_IDENTITY after fix ==="
-          grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-          echo "=== Building ==="
-          xcode-project build-ipa \
-            --workspace "ios/App/App.xcworkspace" \
-            --scheme "App" 2>&1 || {
-            echo "=== XCODE BUILD LOGS ==="
-            if ls /tmp/xcodebuild_logs/*.log 1>/dev/null 2>&1; then
-              cat /tmp/xcodebuild_logs/*.log | tail -100
-            fi
-            echo "=== END LOGS ==="
+          # Get signing identity from keychain
+          IDENTITY=$(security find-identity -v -p codesigning | grep "Apple Distribution" | head -1 | sed 's/.*"\(.*\)".*/\1/')
+          echo "Signing identity: $IDENTITY"
+
+          # Get provisioning profile UUID
+          PROFILE_PATH=$(ls ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision 2>/dev/null | head -1)
+          if [ -z "$PROFILE_PATH" ]; then
+            echo "ERROR: No provisioning profiles found!"
             exit 1
-          }
+          fi
+          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | plutil -extract UUID raw -)
+          echo "Profile UUID: $PROFILE_UUID"
+
+          # Force signing identity in project
+          sed -i '' 's/CODE_SIGN_IDENTITY = "[^"]*"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/App/App.xcodeproj/project.pbxproj
+
+          # Archive
+          xcodebuild archive \
+            -workspace "ios/App/App.xcworkspace" \
+            -scheme "App" \
+            -destination "generic/platform=iOS" \
+            -archivePath "$CM_BUILD_DIR/build/ios/App.xcarchive" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="$IDENTITY" \
+            DEVELOPMENT_TEAM="2T3S5QK2TF" \
+            PROVISIONING_PROFILE="$PROFILE_UUID" \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+          # Create ExportOptions.plist
+          cat > /tmp/ExportOptions.plist << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store</string>
+            <key>teamID</key>
+            <string>2T3S5QK2TF</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>signingCertificate</key>
+            <string>Apple Distribution</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>app.getkeel</key>
+              <string>$PROFILE_UUID</string>
+            </dict>
+          </dict>
+          </plist>
+          PLIST
+
+          # Export IPA
+          xcodebuild -exportArchive \
+            -archivePath "$CM_BUILD_DIR/build/ios/App.xcarchive" \
+            -exportPath "$CM_BUILD_DIR/build/ios/ipa" \
+            -exportOptionsPlist /tmp/ExportOptions.plist
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
