@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+
+# iOS build artifacts (Codemagic handles builds)
+ios/App/Pods/
+ios/App/App/public/
+ios/App/build/
+
+# Capacitor generated
+ios/App/App/capacitor.config.json
