@@ -1,33 +1,40 @@
 <!DOCTYPE html>
 <html>
 <head><title>Generate FocusFlow Icon</title></head>
-<body style="background:#333;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:20px">
+<body style="background:#333;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:30px;font-family:sans-serif">
 <canvas id="icon" width="1024" height="1024"></canvas>
-<a id="download" download="icon-1024.png" style="color:white;font-size:20px;cursor:pointer">Download 1024x1024 Icon</a>
+<div style="display:flex;gap:16px">
+  <a id="download" download="AppIcon-1024x1024.png" style="color:#0C0C12;background:#C8A84E;padding:12px 24px;border-radius:8px;font-size:16px;cursor:pointer;text-decoration:none;font-weight:600">Download Icon (1024x1024)</a>
+</div>
+<p style="color:#888;font-size:14px">Open this file in your browser, then click the button above to save the icon.</p>
 <script>
 const canvas = document.getElementById('icon');
 const ctx = canvas.getContext('2d');
 const size = 1024;
 
-// Background
+// Full background (square, iOS will mask the corners)
 ctx.fillStyle = '#0C0C12';
-ctx.beginPath();
-ctx.roundRect(0, 0, size, size, size * 0.22);
-ctx.fill();
+ctx.fillRect(0, 0, size, size);
+
+// Subtle radial gradient for depth
+const grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size * 0.6);
+grad.addColorStop(0, '#141420');
+grad.addColorStop(1, '#0C0C12');
+ctx.fillStyle = grad;
+ctx.fillRect(0, 0, size, size);
 
 // Gold "FF" text
 ctx.fillStyle = '#C8A84E';
-ctx.font = 'bold 420px -apple-system, "SF Pro Display", "Helvetica Neue", sans-serif';
+ctx.font = '800 380px -apple-system, "SF Pro Display", "Helvetica Neue", Arial, sans-serif';
 ctx.textAlign = 'center';
 ctx.textBaseline = 'middle';
-ctx.fillText('FF', size / 2, size / 2 + 10);
+ctx.fillText('FF', size / 2, size / 2 + 12);
 
 // Download link
 const link = document.getElementById('download');
 link.href = canvas.toDataURL('image/png');
-link.onclick = () => {};
 
-// Also show scaled preview
+// Show scaled preview with iOS rounded corners
 canvas.style.width = '256px';
 canvas.style.height = '256px';
 canvas.style.borderRadius = '56px';
