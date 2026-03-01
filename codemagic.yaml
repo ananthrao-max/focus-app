@@ -6,6 +6,9 @@ workflows:
     integrations:
       app_store_connect: Codemagic
     environment:
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: app.getkeel
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
@@ -23,14 +26,6 @@ workflows:
         script: |
           cd ios/App
           pod install
-      - name: Set up keychain
-        script: keychain initialize
-      - name: Fetch signing files
-        script: |
-          export CERTIFICATE_PRIVATE_KEY="$(openssl genrsa 2048 2>/dev/null)"
-          app-store-connect fetch-signing-files "app.getkeel" \
-            --type IOS_APP_STORE \
-            --create
       - name: Set up code signing
         script: xcode-project use-profiles
       - name: Build iOS app
