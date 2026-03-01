@@ -29,61 +29,42 @@ workflows:
         script: keychain initialize
       - name: Fetch signing files
         script: |
-          # Verify private key is available
-          if [ -n "$CERTIFICATE_PRIVATE_KEY" ]; then
-            echo "CERTIFICATE_PRIVATE_KEY is set (${#CERTIFICATE_PRIVATE_KEY} chars)"
-          else
-            echo "ERROR: CERTIFICATE_PRIVATE_KEY is not set!"
-            exit 1
-          fi
-
-          # Revoke existing distribution certificates that may not match our key
-          echo "=== Revoking mismatched distribution certificates ==="
-          app-store-connect certificates list \
-            --type IOS_DISTRIBUTION \
-            --save 2>/dev/null || true
-
-          # Try to find and revoke existing certs
-          for cert_file in $(find . -name "*.p12" -o -name "*.cer" 2>/dev/null); do
-            echo "Found cert file: $cert_file"
-          done
-
-          # Fetch signing files - will create new cert if none exists
           app-store-connect fetch-signing-files "app.getkeel" \
             --type IOS_APP_STORE \
             --create
-
-          # Verify we got a valid signing identity
-          echo "=== Verifying signing identity ==="
-          security find-identity -v -p codesigning
-          VALID_COUNT=$(security find-identity -v -p codesigning | tail -1 | grep -oE '[0-9]+')
-          echo "Valid identities: $VALID_COUNT"
-
-          if [ "$VALID_COUNT" = "0" ] || [ -z "$VALID_COUNT" ]; then
-            echo ""
-            echo "======================================================="
-            echo "ERROR: No valid signing identity found!"
-            echo "======================================================="
-            echo ""
-            echo "The CERTIFICATE_PRIVATE_KEY does not match the"
-            echo "distribution certificate in Apple Developer Portal."
-            echo ""
-            echo "To fix: Go to Apple Developer Portal -> Certificates"
-            echo "-> Revoke the Distribution certificate -> Rebuild."
-            echo ""
-            echo "URL: https://developer.apple.com/account/resources/certificates/list"
-            echo "======================================================="
-            exit 1
-          fi
       - name: Set up code signing
         script: |
           xcode-project use-profiles
 
-          # Get the actual identity from keychain
-          CERT_NAME=$(security find-identity -v -p codesigning | grep -i "distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
-          echo "Using certificate: $CERT_NAME"
+          echo "=== Signing identities after import ==="
+          security find-identity -v -p codesigning
 
-          # Fix CODE_SIGN_IDENTITY in project (handles conditional [sdk=...] variants)
+          CERT_NAME=$(security find-identity -v -p codesigning | grep -i "distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
+          echo "=== Detected certificate: '$CERT_NAME' ==="
+
+          if [ -z "$CERT_NAME" ]; then
+            echo "No identity after use-profiles, trying manual .p12 import..."
+            KEYCHAIN=$(security list-keychains | head -1 | tr -d '"' | xargs)
+            echo "Keychain: $KEYCHAIN"
+            for p12 in ~/Library/Developer/Xcode/UserData/Certificates/*.p12; do
+              if [ -f "$p12" ]; then
+                echo "Importing: $p12"
+                security import "$p12" -k "$KEYCHAIN" -P "" -T /usr/bin/codesign -T /usr/bin/security 2>&1 || true
+              fi
+            done
+            security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "" "$KEYCHAIN" 2>&1 || true
+            echo "=== After manual import ==="
+            security find-identity -v -p codesigning
+            CERT_NAME=$(security find-identity -v -p codesigning | grep -i "distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
+            echo "=== Detected certificate: '$CERT_NAME' ==="
+          fi
+
+          if [ -z "$CERT_NAME" ]; then
+            echo "ERROR: No valid signing identity found!"
+            exit 1
+          fi
+
+          # Fix CODE_SIGN_IDENTITY everywhere using the actual cert name
           sed -i '' "/CODE_SIGN_IDENTITY/s/= \"[^\"]*\"/= \"${CERT_NAME}\"/g" ios/App/App.xcodeproj/project.pbxproj
           find ios/ -name "*.xcconfig" -exec sed -i '' "s/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = ${CERT_NAME}/g" {} \; 2>/dev/null || true
 
