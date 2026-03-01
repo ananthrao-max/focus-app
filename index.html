@@ -13,14 +13,11 @@
         background: #0C0C12;
         font-family: -apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif;
         -webkit-font-smoothing: antialiased;
-        padding-top: env(safe-area-inset-top);
-        padding-bottom: env(safe-area-inset-bottom);
-        padding-left: env(safe-area-inset-left);
-        padding-right: env(safe-area-inset-right);
         min-height: 100vh;
+        min-height: 100dvh;
         overflow: hidden;
       }
-      #root { height: 100vh; }
+      #root { height: 100vh; height: 100dvh; }
       @keyframes bounce {
         0%, 80%, 100% { transform: translateY(0); }
         40% { transform: translateY(-6px); }

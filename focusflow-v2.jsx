@@ -192,7 +192,7 @@ RECENT REFLECTIONS: ${JSON.stringify((context?.journal || []).slice(-5))}
   } catch (e) {
     console.error("Claude API error:", e);
     return {
-      content: [{ type: "text", text: "Can't reach the server. Check your connection." }],
+      content: [{ type: "text", text: "Can't reach the server. The AI proxy may not be deployed yet." }],
       stop_reason: "end_turn"
     };
   }
@@ -1197,32 +1197,32 @@ const border = "#1C1C2E";
 const txt = "#E2DFDA";
 const sub = "#6B6B7B";
 const S = {
-  app: { fontFamily: "-apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif", background: bg, color: txt, minHeight: "100vh", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" },
-  content: { flex: 1, overflowY: "auto", paddingBottom: 80 },
+  app: { fontFamily: "-apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif", background: bg, color: txt, minHeight: "100vh", minHeight: "100dvh", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" },
+  content: { flex: 1, overflowY: "auto", paddingBottom: 90 },
 
   // Loading
-  loading: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", background: bg, gap: 10 },
+  loading: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", height: "100dvh", background: bg, gap: 10 },
   loadingMark: { fontSize: 36, fontWeight: 800, color: gold, letterSpacing: 6, animation: "pulse 2s ease-in-out infinite" },
   loadingSub: { fontSize: 11, color: sub, letterSpacing: 4 },
 
   // Onboarding
-  onboard: { display: "flex", flexDirection: "column", minHeight: "100vh", background: bg, padding: "60px 24px 40px", justifyContent: "space-between" },
-  onboardProgress: { display: "flex", gap: 6, marginBottom: 60 },
-  progressDot: { height: 3, flex: 1, borderRadius: 3, background: "#222" },
+  onboard: { display: "flex", flexDirection: "column", minHeight: "100vh", minHeight: "100dvh", background: bg, padding: "24px 24px 40px", paddingTop: "calc(env(safe-area-inset-top, 0px) + 24px)", justifyContent: "space-between" },
+  onboardProgress: { display: "flex", gap: 8, marginBottom: 48 },
+  progressDot: { height: 4, flex: 1, borderRadius: 4, background: "#1C1C2E" },
   progressDotActive: { background: gold },
-  onboardCard: { flex: 1 },
-  onboardQ: { fontSize: 26, fontWeight: 700, lineHeight: 1.3, margin: "0 0 10px", color: "#F2F0EB" },
-  onboardSub: { fontSize: 14, color: sub, margin: "0 0 30px", lineHeight: 1.5 },
-  onboardInput: { width: "100%", padding: "16px 18px", fontSize: 17, background: card, border: `1px solid ${border}`, borderRadius: 14, color: txt, outline: "none", boxSizing: "border-box" },
+  onboardCard: { flex: 1, display: "flex", flexDirection: "column", justifyContent: "center" },
+  onboardQ: { fontSize: 28, fontWeight: 700, lineHeight: 1.25, margin: "0 0 12px", color: "#F2F0EB", letterSpacing: -0.5 },
+  onboardSub: { fontSize: 15, color: sub, margin: "0 0 32px", lineHeight: 1.6 },
+  onboardInput: { width: "100%", padding: "18px 20px", fontSize: 17, background: card, border: `1px solid ${border}`, borderRadius: 16, color: txt, outline: "none", boxSizing: "border-box" },
   optionsList: { display: "flex", flexDirection: "column", gap: 10 },
-  optionBtn: { padding: "15px 18px", background: card, border: `1px solid ${border}`, borderRadius: 14, color: txt, fontSize: 15, textAlign: "left", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)" },
+  optionBtn: { padding: "16px 20px", background: card, border: `1px solid ${border}`, borderRadius: 16, color: txt, fontSize: 16, textAlign: "left", cursor: "pointer", transition: "all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)" },
   optionBtnActive: { borderColor: gold, background: `${gold}10` },
-  onboardNav: { display: "flex", gap: 12, marginTop: 40 },
-  backBtn: { padding: "14px 24px", background: "transparent", border: `1px solid #333`, borderRadius: 14, color: sub, fontSize: 14, fontWeight: 600, cursor: "pointer" },
-  nextBtn: { flex: 1, padding: "14px 24px", background: gold, border: "none", borderRadius: 14, color: "#0C0C12", fontSize: 15, fontWeight: 700, cursor: "pointer", transition: "opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
+  onboardNav: { display: "flex", gap: 12, marginTop: 40, paddingBottom: "env(safe-area-inset-bottom, 0px)" },
+  backBtn: { padding: "16px 28px", background: "transparent", border: `1px solid #333`, borderRadius: 16, color: sub, fontSize: 15, fontWeight: 600, cursor: "pointer" },
+  nextBtn: { flex: 1, padding: "16px 28px", background: gold, border: "none", borderRadius: 16, color: "#0C0C12", fontSize: 16, fontWeight: 700, cursor: "pointer", transition: "opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
 
   // Page
-  page: { padding: "24px 20px" },
+  page: { padding: "24px 20px", paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)" },
   pageHead: { marginBottom: 20 },
   dateRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 4 },
   dateLabel: { fontSize: 12, color: sub, letterSpacing: 1.5, textTransform: "uppercase" },
@@ -1303,8 +1303,8 @@ const S = {
   textarea: { width: "100%", padding: "14px 16px", fontSize: 15, background: bg, border: `1px solid ${border}`, borderRadius: 14, color: txt, outline: "none", boxSizing: "border-box", resize: "vertical", lineHeight: 1.5, fontFamily: "inherit", minHeight: 120 },
 
   // Chat
-  chatWrap: { display: "flex", flexDirection: "column", height: "calc(100vh - 80px)" },
-  chatHead: { display: "flex", alignItems: "center", gap: 12, padding: "20px 20px 14px", borderBottom: `1px solid ${border}` },
+  chatWrap: { display: "flex", flexDirection: "column", height: "calc(100vh - 80px)", height: "calc(100dvh - 80px)" },
+  chatHead: { display: "flex", alignItems: "center", gap: 12, padding: "20px 20px 14px", paddingTop: "calc(env(safe-area-inset-top, 0px) + 16px)", borderBottom: `1px solid ${border}` },
   chatAvBig: { width: 40, height: 40, borderRadius: 12, background: `${gold}12`, color: gold, display: "flex", alignItems: "center", justifyContent: "center" },
   chatName: { fontSize: 16, fontWeight: 600, color: "#F2F0EB" },
   chatStatus: { fontSize: 12, color: sub },
@@ -1316,7 +1316,7 @@ const S = {
   userBub: { background: gold, borderRadius: "16px 4px 16px 16px", padding: "12px 16px", fontSize: 14, lineHeight: 1.5, color: bg, maxWidth: "85%", fontWeight: 500 },
   actionBadges: { display: "flex", flexDirection: "column", gap: 4, marginBottom: 6 },
   actionBadge: { display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: `${gold}15`, border: `1px solid ${gold}30`, borderRadius: 10, fontSize: 12, fontWeight: 600, color: gold, lineHeight: 1.3 },
-  chatBar: { display: "flex", gap: 10, padding: "12px 20px 20px", borderTop: `1px solid ${border}` },
+  chatBar: { display: "flex", gap: 10, padding: "12px 20px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)", borderTop: `1px solid ${border}` },
   chatIn: { flex: 1, padding: "13px 16px", fontSize: 15, background: card, border: `1px solid ${border}`, borderRadius: 14, color: txt, outline: "none", fontFamily: "inherit" },
   sendBtn: { width: 46, height: 46, borderRadius: 14, background: gold, border: "none", color: bg, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
 
