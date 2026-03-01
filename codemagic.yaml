@@ -33,7 +33,13 @@ workflows:
             --type IOS_APP_STORE \
             --create
       - name: Set up code signing
-        script: xcode-project use-profiles
+        script: |
+          xcode-project use-profiles
+          echo "=== Keychain certificates ==="
+          security find-identity -v -p codesigning
+          echo "=== Fixing code sign identity ==="
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iOS Distribution"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/CODE_SIGN_IDENTITY = "iPhone Distribution"/CODE_SIGN_IDENTITY = "Apple Distribution"/g' ios/App/App.xcodeproj/project.pbxproj
       - name: Build iOS app
         script: |
           xcode-project build-ipa \
