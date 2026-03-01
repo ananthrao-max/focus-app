@@ -12,7 +12,7 @@ workflows:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
       node: 18
-      xcode: latest
+      xcode: 16.2
       cocoapods: default
     scripts:
       - name: Install dependencies
@@ -35,21 +35,37 @@ workflows:
       - name: Set up code signing
         script: |
           xcode-project use-profiles
-          echo "=== ALL CODE_SIGN_IDENTITY lines after use-profiles ==="
+          echo "=== Xcode version ==="
+          xcodebuild -version
+          echo "=== Signing identities in keychain ==="
+          security find-identity -v -p codesigning
+          echo "=== CODE_SIGN_IDENTITY in project.pbxproj ==="
           grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-          echo "=== Replacing ALL Distribution identity variants ==="
+          echo "=== xcconfig files with CODE_SIGN ==="
+          find ios/ -name "*.xcconfig" -exec grep -Hl "CODE_SIGN" {} \; 2>/dev/null || echo "No xcconfig files with CODE_SIGN"
+          find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN" {} \; 2>/dev/null || true
+          echo "=== Provisioning profile details ==="
+          for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
+            if [ -f "$profile" ]; then
+              echo "--- $(basename "$profile") ---"
+              security cms -D -i "$profile" 2>/dev/null | grep -A1 "Name" | head -4 || true
+            fi
+          done
+          echo "=== Fixing CODE_SIGN_IDENTITY in project.pbxproj ==="
           sed -i '' 's/\(CODE_SIGN_IDENTITY[^=]*= \)"[^"]*"/\1"Apple Distribution"/g' ios/App/App.xcodeproj/project.pbxproj
-          echo "=== CODE_SIGN_IDENTITY after fix ==="
+          echo "=== Fixing CODE_SIGN_IDENTITY in ALL xcconfig files ==="
+          find ios/ -name "*.xcconfig" -exec sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = Apple Distribution/g' {} \; 2>/dev/null || true
+          echo "=== After fix - project.pbxproj ==="
           grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
+          echo "=== After fix - xcconfig files ==="
+          find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN_IDENTITY" {} \; 2>/dev/null || true
       - name: Build iOS app
         script: |
           xcode-project build-ipa \
             --workspace "ios/App/App.xcworkspace" \
             --scheme "App" 2>&1 || {
             echo "=== XCODE BUILD LOGS ==="
-            if ls /tmp/xcodebuild_logs/*.log 1>/dev/null 2>&1; then
-              cat /tmp/xcodebuild_logs/*.log | tail -100
-            fi
+            cat /tmp/xcodebuild_logs/*.log 2>/dev/null | tail -200
             echo "=== END LOGS ==="
             exit 1
           }
