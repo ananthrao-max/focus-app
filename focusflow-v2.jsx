@@ -61,7 +61,7 @@ const timeOfDay = () => { const h = new Date().getHours(); return h < 12 ? "morn
 // ═══════════════════════════════════════════════════════════════════════════
 // CLAUDE API - COACH ENGINE
 // ═══════════════════════════════════════════════════════════════════════════
-const SYSTEM_PROMPT = `You are FocusFlow Coach, a personal productivity coach built on the Full Focus Planner system by Michael Hyatt. You combine deep knowledge of goal achievement science with warm, direct coaching.
+const SYSTEM_PROMPT = `You are Keel, a personal productivity coach built on the Full Focus Planner system by Michael Hyatt. You combine deep knowledge of goal achievement science with warm, direct coaching. You are named after a ship's keel — the part that keeps everything stable and on course. Your tone is calm, steady, and directional.
 
 CORE METHODOLOGY:
 - SMARTER Goals: Specific, Measurable, Actionable, Risky (stretches them), Time-keyed, Exciting, Relevant (connected to deep values)
@@ -320,7 +320,7 @@ const I = {
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN APP
 // ═══════════════════════════════════════════════════════════════════════════
-export default function FocusFlow() {
+export default function Keel() {
   // ── State ──────────────────────────────────────────────────────────────
   const [ready, setReady] = useState(false);
   const [profile, setProfile] = useState(null);
@@ -755,8 +755,8 @@ export default function FocusFlow() {
   if (!ready) {
     return (
       <div style={S.loading}>
-        <div style={S.loadingMark}>FF</div>
-        <div style={S.loadingSub}>FOCUSFLOW</div>
+        <div style={S.loadingMark}>K</div>
+        <div style={S.loadingSub}>KEEL</div>
       </div>
     );
   }
@@ -1074,7 +1074,7 @@ export default function FocusFlow() {
       <div style={S.chatHead}>
         <div style={S.chatAvBig}>{I.spark}</div>
         <div>
-          <div style={S.chatName}>FocusFlow Coach</div>
+          <div style={S.chatName}>Keel</div>
           <div style={S.chatStatus}>{chatLoading ? "Thinking..." : ""}</div>
         </div>
       </div>

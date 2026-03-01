@@ -1,6 +1,6 @@
 {
-  "appId": "com.focusflow.app",
-  "appName": "FocusFlow",
+  "appId": "app.getkeel",
+  "appName": "Keel",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"

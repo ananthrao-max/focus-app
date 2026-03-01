@@ -1,6 +1,6 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import FocusFlow from "../focusflow-v2.jsx";
+import Keel from "../focusflow-v2.jsx";
 
 // Polyfill window.storage using localStorage (the original app expects this API)
 if (!window.storage) {
@@ -35,6 +35,6 @@ initCapacitor();
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <FocusFlow />
+    <Keel />
   </React.StrictMode>
 );

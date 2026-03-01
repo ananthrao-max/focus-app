@@ -1,20 +1,20 @@
-# FocusFlow — App Store Metadata
+# Keel — App Store Metadata
 
 ## App Name
-FocusFlow
+Keel
 
 ## Subtitle (30 chars max)
-AI coach for what matters most
+Your Focus Anchor
 
 ## Category
 Productivity
 
 ## Keywords (100 chars max, comma-separated)
-productivity,goals,planner,AI coach,Big 3,focus,tasks,weekly planning,goal setting,daily planner
+productivity,goals,planner,AI coach,focus,tasks,weekly planning,goal setting,daily planner,Big 3
 
 ## Description (4000 chars max)
 
-FocusFlow is a productivity app with a built-in AI coach that helps you focus on what actually moves the needle.
+Keel is a productivity app with a built-in AI coach that keeps you stable and on course — even when everything else is rough water.
 
 Instead of filling out forms and checking boxes, you talk to your coach. It listens, asks the right questions, and puts everything in the right place — your goals, your weekly outcomes, your daily priorities. No double entry. No busywork.
 
@@ -26,7 +26,7 @@ Everything else goes to your to-do list automatically. Nothing gets lost.
 
 THE BIG 3
 
-Every day, you pick three things that matter most. Not five. Not ten. Three. This constraint is the point. When everything is a priority, nothing is. FocusFlow enforces this so you stay focused on what moves the needle.
+Every day, you pick three things that matter most. Not five. Not ten. Three. This constraint is the point. When everything is a priority, nothing is. Keel enforces this so you stay anchored to what actually moves the needle.
 
 GOALS THAT STICK
 
@@ -40,15 +40,15 @@ At the start of each week, review what you're working toward. Your coach helps y
 
 YOUR COACH KNOWS YOUR CONTEXT
 
-The more you use FocusFlow, the smarter your coach gets. It remembers your goals, your patterns, your reflections. Morning nudges help you set your Big 3. Evening prompts help you reflect. If something keeps showing up on your to-do list, your coach notices and suggests making it a system.
+The more you use Keel, the smarter your coach gets. It remembers your goals, your patterns, your reflections. Morning nudges help you set your Big 3. Evening prompts help you reflect. If something keeps showing up on your to-do list, your coach notices and suggests making it a system.
 
 Built on the Full Focus Planner methodology. Powered by AI that acts, not just talks.
 
 ## Promotional Text (170 chars max)
-Talk to your AI coach. It sets your goals, plans your week, and picks your daily Big 3. No forms. No busywork. Just clarity on what matters.
+Your focus anchor. Talk to your AI coach — it sets your goals, plans your week, and picks your daily Big 3. No forms. No busywork. Just clarity.
 
 ## Privacy URL
-https://ananthrao-max.github.io/focus-app-privacy/
+https://ananthrao-max.github.io/focus-app/
 
 ## Support URL
 https://github.com/ananthrao-max/focus-app/issues
