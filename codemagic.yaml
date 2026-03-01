@@ -35,15 +35,22 @@ workflows:
       - name: Set up code signing
         script: |
           xcode-project use-profiles
-          echo "=== Xcode version ==="
-          xcodebuild -version
+
           echo "=== Signing identities in keychain ==="
           security find-identity -v -p codesigning
-          echo "=== CODE_SIGN_IDENTITY in project.pbxproj ==="
+
+          echo "=== CODE_SIGN_IDENTITY set by use-profiles ==="
           grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-          echo "=== xcconfig files with CODE_SIGN ==="
-          find ios/ -name "*.xcconfig" -exec grep -Hl "CODE_SIGN" {} \; 2>/dev/null || echo "No xcconfig files with CODE_SIGN"
-          find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN" {} \; 2>/dev/null || true
+
+          echo "=== PROVISIONING_PROFILE set by use-profiles ==="
+          grep -n "PROVISIONING_PROFILE" ios/App/App.xcodeproj/project.pbxproj || true
+
+          echo "=== All xcconfig files ==="
+          find ios/ -name "*.xcconfig" -ls 2>/dev/null || echo "None found"
+
+          echo "=== CODE_SIGN in xcconfig files ==="
+          find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN" {} \; 2>/dev/null || echo "None"
+
           echo "=== Provisioning profile details ==="
           for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
             if [ -f "$profile" ]; then
@@ -51,13 +58,30 @@ workflows:
               security cms -D -i "$profile" 2>/dev/null | grep -A1 "Name" | head -4 || true
             fi
           done
-          echo "=== Fixing CODE_SIGN_IDENTITY in project.pbxproj ==="
-          sed -i '' 's/\(CODE_SIGN_IDENTITY[^=]*= \)"[^"]*"/\1"Apple Distribution"/g' ios/App/App.xcodeproj/project.pbxproj
-          echo "=== Fixing CODE_SIGN_IDENTITY in ALL xcconfig files ==="
-          find ios/ -name "*.xcconfig" -exec sed -i '' 's/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = Apple Distribution/g' {} \; 2>/dev/null || true
-          echo "=== After fix - project.pbxproj ==="
+
+          # DYNAMIC: Read the ACTUAL certificate identity from keychain
+          CERT_NAME=$(security find-identity -v -p codesigning | grep -i "distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
+          echo "=== Detected certificate identity: '$CERT_NAME' ==="
+
+          if [ -z "$CERT_NAME" ]; then
+            echo "WARNING: No distribution cert found, trying any signing identity..."
+            CERT_NAME=$(security find-identity -v -p codesigning | head -1 | sed 's/.*"\(.*\)"/\1/')
+            echo "=== Fallback identity: '$CERT_NAME' ==="
+          fi
+
+          if [ -z "$CERT_NAME" ]; then
+            echo "ERROR: No signing identity found at all!"
+            security find-identity -v
+            exit 1
+          fi
+
+          # Fix CODE_SIGN_IDENTITY using line-match pattern (handles conditional [sdk=...] variants)
+          echo "=== Replacing CODE_SIGN_IDENTITY with: $CERT_NAME ==="
+          sed -i '' "/CODE_SIGN_IDENTITY/s/= \"[^\"]*\"/= \"${CERT_NAME}\"/g" ios/App/App.xcodeproj/project.pbxproj
+          find ios/ -name "*.xcconfig" -exec sed -i '' "s/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = ${CERT_NAME}/g" {} \; 2>/dev/null || true
+
+          echo "=== Final CODE_SIGN_IDENTITY ==="
           grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-          echo "=== After fix - xcconfig files ==="
           find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN_IDENTITY" {} \; 2>/dev/null || true
       - name: Build iOS app
         script: |
