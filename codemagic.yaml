@@ -29,60 +29,66 @@ workflows:
         script: keychain initialize
       - name: Fetch signing files
         script: |
+          # Verify private key is available
+          if [ -n "$CERTIFICATE_PRIVATE_KEY" ]; then
+            echo "CERTIFICATE_PRIVATE_KEY is set (${#CERTIFICATE_PRIVATE_KEY} chars)"
+          else
+            echo "ERROR: CERTIFICATE_PRIVATE_KEY is not set!"
+            exit 1
+          fi
+
+          # Revoke existing distribution certificates that may not match our key
+          echo "=== Revoking mismatched distribution certificates ==="
+          app-store-connect certificates list \
+            --type IOS_DISTRIBUTION \
+            --save 2>/dev/null || true
+
+          # Try to find and revoke existing certs
+          for cert_file in $(find . -name "*.p12" -o -name "*.cer" 2>/dev/null); do
+            echo "Found cert file: $cert_file"
+          done
+
+          # Fetch signing files - will create new cert if none exists
           app-store-connect fetch-signing-files "app.getkeel" \
             --type IOS_APP_STORE \
             --create
+
+          # Verify we got a valid signing identity
+          echo "=== Verifying signing identity ==="
+          security find-identity -v -p codesigning
+          VALID_COUNT=$(security find-identity -v -p codesigning | tail -1 | grep -oE '[0-9]+')
+          echo "Valid identities: $VALID_COUNT"
+
+          if [ "$VALID_COUNT" = "0" ] || [ -z "$VALID_COUNT" ]; then
+            echo ""
+            echo "======================================================="
+            echo "ERROR: No valid signing identity found!"
+            echo "======================================================="
+            echo ""
+            echo "The CERTIFICATE_PRIVATE_KEY does not match the"
+            echo "distribution certificate in Apple Developer Portal."
+            echo ""
+            echo "To fix: Go to Apple Developer Portal -> Certificates"
+            echo "-> Revoke the Distribution certificate -> Rebuild."
+            echo ""
+            echo "URL: https://developer.apple.com/account/resources/certificates/list"
+            echo "======================================================="
+            exit 1
+          fi
       - name: Set up code signing
         script: |
           xcode-project use-profiles
 
-          echo "=== Signing identities in keychain ==="
-          security find-identity -v -p codesigning
-
-          echo "=== CODE_SIGN_IDENTITY set by use-profiles ==="
-          grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-
-          echo "=== PROVISIONING_PROFILE set by use-profiles ==="
-          grep -n "PROVISIONING_PROFILE" ios/App/App.xcodeproj/project.pbxproj || true
-
-          echo "=== All xcconfig files ==="
-          find ios/ -name "*.xcconfig" -ls 2>/dev/null || echo "None found"
-
-          echo "=== CODE_SIGN in xcconfig files ==="
-          find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN" {} \; 2>/dev/null || echo "None"
-
-          echo "=== Provisioning profile details ==="
-          for profile in ~/Library/MobileDevice/Provisioning\ Profiles/*.mobileprovision; do
-            if [ -f "$profile" ]; then
-              echo "--- $(basename "$profile") ---"
-              security cms -D -i "$profile" 2>/dev/null | grep -A1 "Name" | head -4 || true
-            fi
-          done
-
-          # DYNAMIC: Read the ACTUAL certificate identity from keychain
+          # Get the actual identity from keychain
           CERT_NAME=$(security find-identity -v -p codesigning | grep -i "distribution" | head -1 | sed 's/.*"\(.*\)"/\1/')
-          echo "=== Detected certificate identity: '$CERT_NAME' ==="
+          echo "Using certificate: $CERT_NAME"
 
-          if [ -z "$CERT_NAME" ]; then
-            echo "WARNING: No distribution cert found, trying any signing identity..."
-            CERT_NAME=$(security find-identity -v -p codesigning | head -1 | sed 's/.*"\(.*\)"/\1/')
-            echo "=== Fallback identity: '$CERT_NAME' ==="
-          fi
-
-          if [ -z "$CERT_NAME" ]; then
-            echo "ERROR: No signing identity found at all!"
-            security find-identity -v
-            exit 1
-          fi
-
-          # Fix CODE_SIGN_IDENTITY using line-match pattern (handles conditional [sdk=...] variants)
-          echo "=== Replacing CODE_SIGN_IDENTITY with: $CERT_NAME ==="
+          # Fix CODE_SIGN_IDENTITY in project (handles conditional [sdk=...] variants)
           sed -i '' "/CODE_SIGN_IDENTITY/s/= \"[^\"]*\"/= \"${CERT_NAME}\"/g" ios/App/App.xcodeproj/project.pbxproj
           find ios/ -name "*.xcconfig" -exec sed -i '' "s/CODE_SIGN_IDENTITY = .*/CODE_SIGN_IDENTITY = ${CERT_NAME}/g" {} \; 2>/dev/null || true
 
           echo "=== Final CODE_SIGN_IDENTITY ==="
           grep -n "CODE_SIGN_IDENTITY" ios/App/App.xcodeproj/project.pbxproj || true
-          find ios/ -name "*.xcconfig" -exec grep -H "CODE_SIGN_IDENTITY" {} \; 2>/dev/null || true
       - name: Build iOS app
         script: |
           xcode-project build-ipa \
