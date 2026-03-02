@@ -681,7 +681,16 @@ export default function Keel() {
 
   const addBig3 = (title) => {
     if (todayTasks.length >= 3) return;
+    const newTasks = [...todayTasks, { id: uid(), title, date: today(), done: false }];
     setDailyBig3(prev => [...prev, { id: uid(), title, date: today(), done: false }]);
+
+    // When Big 3 is full (3 items), have the coach review them
+    if (newTasks.length === 3) {
+      const titles = newTasks.map((t, i) => `${i + 1}. ${t.title}`).join("\n");
+      const prompt = `I just set my Big 3 for today:\n\n${titles}\n\nQuick gut check — are these solid? Any red flags or suggestions?`;
+      setTab("chat");
+      setTimeout(() => sendChat(prompt), 400);
+    }
   };
 
   const addTodo = () => {
@@ -854,16 +863,14 @@ export default function Keel() {
         <h1 style={S.pageTitle}>Today</h1>
       </div>
 
-      {/* Mind Dump CTA */}
-      {!hasDumpedToday && todayTasks.length === 0 && (
-        <button onClick={() => { setShowMindDump(true); setDumpText(""); }} style={S.mindDumpCta}>
-          <div style={S.mindDumpIcon}>{I.brain}</div>
-          <div>
-            <div style={S.mindDumpTitle}>What's on your mind today?</div>
-            <div style={S.mindDumpSub}>Get it out of your head. I'll sort it.</div>
-          </div>
-        </button>
-      )}
+      {/* Mind Dump CTA - always visible */}
+      <button onClick={() => { setShowMindDump(true); setDumpText(""); }} style={todayTasks.length === 0 ? S.mindDumpCta : S.mindDumpCtaMini}>
+        <div style={S.mindDumpIcon}>{I.brain}</div>
+        <div>
+          <div style={S.mindDumpTitle}>{todayTasks.length === 0 ? "What's on your mind today?" : "Brain dump"}</div>
+          {todayTasks.length === 0 && <div style={S.mindDumpSub}>Get it out of your head. I'll sort it.</div>}
+        </div>
+      </button>
 
       {/* Mind Dump Modal */}
       {showMindDump && (
@@ -915,12 +922,8 @@ export default function Keel() {
           ))}
         </div>
 
-        {todayTasks.length < 3 && todayTasks.length > 0 && (
-          <QuickAdd placeholder="Add to Big 3" onAdd={addBig3} />
-        )}
-
-        {todayTasks.length === 0 && hasDumpedToday && (
-          <QuickAdd placeholder="What matters most today?" onAdd={addBig3} />
+        {todayTasks.length < 3 && (
+          <QuickAdd placeholder={todayTasks.length === 0 ? "What matters most today?" : "Add to Big 3"} onAdd={addBig3} />
         )}
       </div>
 
@@ -1242,7 +1245,8 @@ const S = {
   pageSub: { fontSize: 15, color: sub, margin: "5px 0 0" },
 
   // Mind Dump CTA
-  mindDumpCta: { display: "flex", alignItems: "center", gap: 16, width: "100%", padding: "18px 20px", background: `linear-gradient(135deg, ${gold}08, ${gold}15)`, border: `1px solid ${gold}30`, borderRadius: 18, cursor: "pointer", textAlign: "left", marginBottom: 24 },
+  mindDumpCta: { display: "flex", alignItems: "center", gap: 16, width: "100%", padding: "18px 20px", background: `linear-gradient(135deg, ${gold}08, ${gold}15)`, border: `1px solid ${gold}30`, borderRadius: 18, cursor: "pointer", textAlign: "left", marginBottom: 24, transition: "all 0.2s ease" },
+  mindDumpCtaMini: { display: "flex", alignItems: "center", gap: 12, width: "100%", padding: "12px 16px", background: `${gold}06`, border: `1px solid ${gold}20`, borderRadius: 14, cursor: "pointer", textAlign: "left", marginBottom: 20, transition: "all 0.2s ease" },
   mindDumpIcon: { color: gold, flexShrink: 0, opacity: 0.8 },
   mindDumpTitle: { fontSize: 16, fontWeight: 600, color: "#F2F0EB", marginBottom: 3 },
   mindDumpSub: { fontSize: 13, color: sub, lineHeight: 1.4 },
