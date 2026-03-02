@@ -705,6 +705,9 @@ export default function Keel() {
   // ═══════════════════════════════════════════════════════════════════════
   const onboardSteps = [
     {
+      type: "intro",
+    },
+    {
       q: "What should I call you?",
       sub: "First name is perfect.",
       field: "name",
@@ -785,17 +788,52 @@ export default function Keel() {
   // ── Onboarding Screen ─────────────────────────────────────────────────
   if (!profile) {
     const step = onboardSteps[onboardStep];
-    const question = typeof step.q === "function" ? step.q(onboardData) : step.q;
-    const canNext = step.optional || onboardData[step.field]?.trim?.()?.length > 0 || onboardData[step.field]?.length > 0;
+    const isIntro = step.type === "intro";
+    const question = isIntro ? "" : (typeof step.q === "function" ? step.q(onboardData) : step.q);
+    const canNext = isIntro || step.optional || onboardData[step.field]?.trim?.()?.length > 0 || onboardData[step.field]?.length > 0;
     const isLast = onboardStep === onboardSteps.length - 1;
 
     return (
       <div style={S.onboard}>
-        <div style={S.onboardProgress}>
-          {onboardSteps.map((_, i) => (
-            <div key={i} style={{ ...S.progressDot, ...(i <= onboardStep ? S.progressDotActive : {}) }} />
-          ))}
-        </div>
+        {!isIntro && (
+          <div style={S.onboardProgress}>
+            {onboardSteps.filter(s => s.type !== "intro").map((_, i) => (
+              <div key={i} style={{ ...S.progressDot, ...(i <= onboardStep - 1 ? S.progressDotActive : {}) }} />
+            ))}
+          </div>
+        )}
+
+        {isIntro ? (
+          <div style={S.introCard}>
+            <div style={S.introLogo}>K</div>
+            <h1 style={S.introTitle}>Keel</h1>
+            <p style={S.introTagline}>Your AI productivity coach</p>
+
+            <div style={S.introFeatures}>
+              <div style={S.introFeature}>
+                <span style={S.introFeatureIcon}>{I.target}</span>
+                <div>
+                  <div style={S.introFeatureTitle}>Set goals that stick</div>
+                  <div style={S.introFeatureSub}>The SMARTER framework turns vague wishes into clear targets</div>
+                </div>
+              </div>
+              <div style={S.introFeature}>
+                <span style={S.introFeatureIcon}>{I.spark}</span>
+                <div>
+                  <div style={S.introFeatureTitle}>Daily Big 3</div>
+                  <div style={S.introFeatureSub}>Focus on 3 things that actually move the needle each day</div>
+                </div>
+              </div>
+              <div style={S.introFeature}>
+                <span style={S.introFeatureIcon}>{I.brain}</span>
+                <div>
+                  <div style={S.introFeatureTitle}>Brain dump, then sort</div>
+                  <div style={S.introFeatureSub}>Get it all out of your head. Your coach organizes the rest.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
         <div style={S.onboardCard}>
           <h2 style={S.onboardQ}>{question}</h2>
           <p style={S.onboardSub}>{step.sub}</p>
@@ -835,6 +873,7 @@ export default function Keel() {
             />
           )}
         </div>
+        )}
         <div style={S.onboardNav}>
           {onboardStep > 0 && (
             <button onClick={() => setOnboardStep(s => s - 1)} style={S.backBtn}>Back</button>
@@ -844,7 +883,7 @@ export default function Keel() {
             disabled={!canNext}
             style={{ ...S.nextBtn, opacity: canNext ? 1 : 0.3 }}
           >
-            {isLast ? "Start" : "Continue"}
+            {isLast ? "Start" : isIntro ? "Get Started" : "Continue"}
           </button>
         </div>
       </div>
@@ -1235,6 +1274,17 @@ const S = {
   onboardNav: { display: "flex", gap: 12, marginTop: 40, paddingBottom: "env(safe-area-inset-bottom, 0px)" },
   backBtn: { padding: "16px 28px", background: "transparent", border: `1px solid #333`, borderRadius: 16, color: sub, fontSize: 15, fontWeight: 600, cursor: "pointer" },
   nextBtn: { flex: 1, padding: "16px 28px", background: gold, border: "none", borderRadius: 16, color: "#0C0C12", fontSize: 16, fontWeight: 700, cursor: "pointer", transition: "opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
+
+  // Intro screen
+  introCard: { flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", textAlign: "center", gap: 6 },
+  introLogo: { fontSize: 52, fontWeight: 800, color: gold, letterSpacing: 6, marginBottom: 4 },
+  introTitle: { fontSize: 34, fontWeight: 800, color: "#F2F0EB", margin: 0, letterSpacing: -0.5 },
+  introTagline: { fontSize: 16, color: sub, margin: "0 0 40px", fontWeight: 400 },
+  introFeatures: { display: "flex", flexDirection: "column", gap: 16, width: "100%", textAlign: "left" },
+  introFeature: { display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 16px", background: card, border: `1px solid ${border}`, borderRadius: 16 },
+  introFeatureIcon: { color: gold, fontSize: 20, flexShrink: 0, marginTop: 2 },
+  introFeatureTitle: { fontSize: 15, fontWeight: 600, color: "#F2F0EB", marginBottom: 2 },
+  introFeatureSub: { fontSize: 13, color: sub, lineHeight: 1.4 },
 
   // Page
   page: { padding: "24px 20px", paddingTop: "calc(env(safe-area-inset-top, 0px) + 20px)" },
