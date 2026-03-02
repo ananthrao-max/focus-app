@@ -1362,7 +1362,7 @@ const S = {
 
   // Modal
   modal: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 100, backdropFilter: "blur(4px)" },
-  modalSheet: { background: "#18182A", borderRadius: "24px 24px 0 0", padding: "28px 24px 36px", width: "100%", maxWidth: 430, display: "flex", flexDirection: "column", gap: 14 },
+  modalSheet: { background: "#18182A", borderRadius: "24px 24px 0 0", padding: "28px 24px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)", width: "100%", maxWidth: 430, display: "flex", flexDirection: "column", gap: 14 },
   modalTitle: { fontSize: 20, fontWeight: 700, margin: 0, color: "#F2F0EB" },
   modalSub: { fontSize: 14, color: sub, margin: "-8px 0 0", lineHeight: 1.4 },
   modalBtns: { display: "flex", gap: 10, marginTop: 4 },
