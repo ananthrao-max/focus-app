@@ -80,8 +80,16 @@ YOUR COACHING STYLE:
 - Celebrate wins without being cheesy. A simple "That's a full sweep. Well done." beats emojis and exclamation marks.
 - When they brain dump, help them see what's actually important vs. what feels urgent
 - Flag recurring to-dos as potential systems or habits to build
-- Keep responses concise. 2-4 sentences usually. This is mobile. Walls of text don't work.
 - Never say "you've got this", "great job", "awesome", "amazing", or similar. Be warm but not performative.
+
+CRITICAL - BREVITY:
+- This is a MOBILE app. Users read on a phone screen. Keep messages SHORT.
+- Default to 2-3 sentences. Absolute max 4-5 sentences for complex topics.
+- One idea per message. Don't stack multiple points or questions.
+- Ask ONE question at a time. Never ask multiple questions in the same message.
+- No numbered lists or long breakdowns unless the user explicitly asks for detail.
+- If you need to cover multiple things, spread them across the conversation naturally.
+- Think text message energy, not email energy.
 
 SMARTER GOAL REFINEMENT FLOW:
 When someone shares a goal, check each element:
@@ -389,8 +397,11 @@ export default function Keel() {
   useEffect(() => { if (ready) store.set(KEYS.streaks, streaks); }, [streaks, ready]);
   useEffect(() => { if (ready) store.set(KEYS.mindDump, mindDump); }, [mindDump, ready]);
 
-  // ── Chat scroll ────────────────────────────────────────────────────────
-  useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [chatMsgs]);
+  // ── Chat scroll (tiny delay for message animation to start first) ────
+  useEffect(() => {
+    const t = setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: "smooth" }), 80);
+    return () => clearTimeout(t);
+  }, [chatMsgs]);
 
   // ── Streaks ────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -1199,7 +1210,7 @@ const txt = "#E2DFDA";
 const sub = "#6B6B7B";
 const S = {
   app: { fontFamily: "-apple-system, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', sans-serif", background: bg, color: txt, minHeight: "100vh", minHeight: "100dvh", maxWidth: 430, margin: "0 auto", display: "flex", flexDirection: "column" },
-  content: { flex: 1, overflowY: "auto", paddingBottom: 90 },
+  content: { flex: 1, overflowY: "auto", paddingBottom: 90, WebkitOverflowScrolling: "touch", scrollBehavior: "smooth", animation: "fadeIn 0.2s ease" },
 
   // Loading
   loading: { display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "100vh", height: "100dvh", background: bg, gap: 10 },
@@ -1228,7 +1239,7 @@ const S = {
   dateRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 4 },
   dateLabel: { fontSize: 12, color: sub, letterSpacing: 1.5, textTransform: "uppercase" },
   pageTitle: { fontSize: 28, fontWeight: 700, margin: 0, color: "#F2F0EB", letterSpacing: -0.5 },
-  pageSub: { fontSize: 14, color: sub, margin: "5px 0 0" },
+  pageSub: { fontSize: 15, color: sub, margin: "5px 0 0" },
 
   // Mind Dump CTA
   mindDumpCta: { display: "flex", alignItems: "center", gap: 16, width: "100%", padding: "18px 20px", background: `linear-gradient(135deg, ${gold}08, ${gold}15)`, border: `1px solid ${gold}30`, borderRadius: 18, cursor: "pointer", textAlign: "left", marginBottom: 24 },
@@ -1252,7 +1263,7 @@ const S = {
   taskNum: { width: 22, height: 22, borderRadius: 7, background: `${gold}12`, color: gold, fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 },
   chk: { width: 24, height: 24, borderRadius: 8, border: "2px solid #333", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", padding: 0, transition: "all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)" },
   chkDone: { background: gold, borderColor: gold, color: bg },
-  taskTxt: { flex: 1, fontSize: 15, lineHeight: 1.4, color: "#DDD9D2" },
+  taskTxt: { flex: 1, fontSize: 16, lineHeight: 1.4, color: "#DDD9D2" },
   taskTxtDone: { textDecoration: "line-through", color: "#444" },
   delBtn: { background: "transparent", border: "none", color: "#333", cursor: "pointer", padding: 4, display: "flex", opacity: 0.5 },
 
@@ -1260,7 +1271,7 @@ const S = {
   todoCard: { display: "flex", alignItems: "center", gap: 10, background: card, borderRadius: 12, padding: "11px 14px", border: `1px solid ${border}` },
   chkSmall: { width: 20, height: 20, borderRadius: 6, border: "2px solid #333", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "#fff", padding: 0 },
   chkSmallDone: { background: "#4A9D6E", borderColor: "#4A9D6E", color: "#fff" },
-  todoTxt: { flex: 1, fontSize: 14, color: "#CCC8C0" },
+  todoTxt: { flex: 1, fontSize: 15, color: "#CCC8C0" },
 
   // Insight bar
   insightBar: { display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", background: `${gold}08`, border: `1px solid ${gold}20`, borderRadius: 12, marginBottom: 10, color: gold },
@@ -1309,16 +1320,16 @@ const S = {
   chatAvBig: { width: 40, height: 40, borderRadius: 12, background: `${gold}12`, color: gold, display: "flex", alignItems: "center", justifyContent: "center" },
   chatName: { fontSize: 16, fontWeight: 600, color: "#F2F0EB" },
   chatStatus: { fontSize: 12, color: sub },
-  chatBody: { flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 },
-  aiRow: { display: "flex", gap: 10, alignItems: "flex-start" },
-  userRow: { display: "flex", justifyContent: "flex-end" },
+  chatBody: { flex: 1, overflowY: "auto", padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14, WebkitOverflowScrolling: "touch", scrollBehavior: "smooth" },
+  aiRow: { display: "flex", gap: 10, alignItems: "flex-start", animation: "msgIn 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
+  userRow: { display: "flex", justifyContent: "flex-end", animation: "msgIn 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
   aiAv: { width: 26, height: 26, borderRadius: 8, background: `${gold}12`, color: gold, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, marginTop: 2 },
-  aiBub: { background: card, borderRadius: "4px 16px 16px 16px", padding: "12px 16px", fontSize: 14, lineHeight: 1.6, color: "#CCC8C0", maxWidth: "85%", border: `1px solid ${border}` },
-  userBub: { background: gold, borderRadius: "16px 4px 16px 16px", padding: "12px 16px", fontSize: 14, lineHeight: 1.5, color: bg, maxWidth: "85%", fontWeight: 500 },
+  aiBub: { background: card, borderRadius: "4px 16px 16px 16px", padding: "14px 16px", fontSize: 16, lineHeight: 1.55, color: "#CCC8C0", maxWidth: "85%", border: `1px solid ${border}` },
+  userBub: { background: gold, borderRadius: "16px 4px 16px 16px", padding: "14px 16px", fontSize: 16, lineHeight: 1.5, color: bg, maxWidth: "85%", fontWeight: 500 },
   actionBadges: { display: "flex", flexDirection: "column", gap: 4, marginBottom: 6 },
   actionBadge: { display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 12px", background: `${gold}15`, border: `1px solid ${gold}30`, borderRadius: 10, fontSize: 12, fontWeight: 600, color: gold, lineHeight: 1.3 },
-  chatBar: { display: "flex", gap: 10, padding: "12px 20px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)", borderTop: `1px solid ${border}` },
-  chatIn: { flex: 1, padding: "13px 16px", fontSize: 15, background: card, border: `1px solid ${border}`, borderRadius: 14, color: txt, outline: "none", fontFamily: "inherit" },
+  chatBar: { display: "flex", gap: 10, padding: "12px 20px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)", borderTop: `1px solid ${border}`, transition: "padding 0.2s ease" },
+  chatIn: { flex: 1, padding: "13px 16px", fontSize: 16, background: card, border: `1px solid ${border}`, borderRadius: 14, color: txt, outline: "none", fontFamily: "inherit" },
   sendBtn: { width: 46, height: 46, borderRadius: 14, background: gold, border: "none", color: bg, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0, transition: "opacity 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94)" },
 
   // Typing indicator
