@@ -30,6 +30,7 @@ const KEYS = {
   otherTodos: "ff-todos",
   journal: "ff-journal",
   chatHistory: "ff-chat",
+  apiHistory: "ff-api-history",
   streaks: "ff-streaks",
   mindDump: "ff-minddump",
 };
@@ -362,7 +363,7 @@ export default function Keel() {
   // ── Load all data ──────────────────────────────────────────────────────
   useEffect(() => {
     (async () => {
-      const [p, g, q, w, d, o, j, s, m] = await Promise.all([
+      const [p, g, q, w, d, o, j, s, m, ch, ah] = await Promise.all([
         store.get(KEYS.profile),
         store.get(KEYS.goals),
         store.get(KEYS.quarters),
@@ -372,6 +373,8 @@ export default function Keel() {
         store.get(KEYS.journal),
         store.get(KEYS.streaks),
         store.get(KEYS.mindDump),
+        store.get(KEYS.chatHistory),
+        store.get(KEYS.apiHistory),
       ]);
       if (p) setProfile(p);
       if (g) setGoals(g);
@@ -382,6 +385,8 @@ export default function Keel() {
       if (j) setJournal(j);
       if (s) setStreaks(s);
       if (m) setMindDump(m);
+      if (ch) setChatMsgs(ch);
+      if (ah) apiHistoryRef.current = ah;
       setReady(true);
     })();
   }, []);
@@ -396,6 +401,7 @@ export default function Keel() {
   useEffect(() => { if (ready) store.set(KEYS.journal, journal); }, [journal, ready]);
   useEffect(() => { if (ready) store.set(KEYS.streaks, streaks); }, [streaks, ready]);
   useEffect(() => { if (ready) store.set(KEYS.mindDump, mindDump); }, [mindDump, ready]);
+  useEffect(() => { if (ready && chatMsgs.length > 0) { store.set(KEYS.chatHistory, chatMsgs.slice(-50)); store.set(KEYS.apiHistory, apiHistoryRef.current.slice(-40)); } }, [chatMsgs, ready]);
 
   // ── Chat scroll (tiny delay for message animation to start first) ────
   useEffect(() => {
@@ -451,8 +457,6 @@ export default function Keel() {
   const weekTasks = weeklyTasks.filter(t => t.weekId === getWeekId());
   const qMilestones = quarters.filter(q => q.quarter === getQ());
   const todayTodos = otherTodos.filter(t => t.date === today());
-  const hasDumpedToday = mindDump.date === today();
-
   const buildContext = () => ({
     goals, quarters: qMilestones, weeklyTasks: weekTasks, todayTasks, otherTodos: todayTodos, streak: streaks.daily, journal,
   });
@@ -681,8 +685,9 @@ export default function Keel() {
 
   const addBig3 = (title) => {
     if (todayTasks.length >= 3) return;
-    const newTasks = [...todayTasks, { id: uid(), title, date: today(), done: false }];
-    setDailyBig3(prev => [...prev, { id: uid(), title, date: today(), done: false }]);
+    const task = { id: uid(), title, date: today(), done: false };
+    const newTasks = [...todayTasks, task];
+    setDailyBig3(prev => [...prev, task]);
 
     // When Big 3 is full (3 items), have the coach review them
     if (newTasks.length === 3) {
@@ -898,7 +903,10 @@ export default function Keel() {
       <div style={S.pageHead}>
         <div style={S.dateRow}>
           <span style={S.dateLabel}>{fmtDate(today())}</span>
-                  </div>
+          {streaks.daily > 0 && (
+            <span style={S.streakBadge}>{I.flame} {streaks.daily}d</span>
+          )}
+        </div>
         <h1 style={S.pageTitle}>Today</h1>
       </div>
 
@@ -1291,6 +1299,7 @@ const S = {
   pageHead: { marginBottom: 20 },
   dateRow: { display: "flex", alignItems: "center", gap: 10, marginBottom: 4 },
   dateLabel: { fontSize: 12, color: sub, letterSpacing: 1.5, textTransform: "uppercase" },
+  streakBadge: { display: "inline-flex", alignItems: "center", gap: 4, fontSize: 12, fontWeight: 600, color: gold, background: `${gold}10`, padding: "3px 10px", borderRadius: 10 },
   pageTitle: { fontSize: 28, fontWeight: 700, margin: 0, color: "#F2F0EB", letterSpacing: -0.5 },
   pageSub: { fontSize: 15, color: sub, margin: "5px 0 0" },
 
@@ -1362,7 +1371,7 @@ const S = {
 
   // Modal
   modal: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "flex-end", justifyContent: "center", zIndex: 100, backdropFilter: "blur(4px)" },
-  modalSheet: { background: "#18182A", borderRadius: "24px 24px 0 0", padding: "28px 24px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)", width: "100%", maxWidth: 430, display: "flex", flexDirection: "column", gap: 14 },
+  modalSheet: { background: "#18182A", borderRadius: "24px 24px 0 0", padding: "28px 24px", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 100px)", width: "100%", maxWidth: 430, maxHeight: "85vh", overflowY: "auto", display: "flex", flexDirection: "column", gap: 14 },
   modalTitle: { fontSize: 20, fontWeight: 700, margin: 0, color: "#F2F0EB" },
   modalSub: { fontSize: 14, color: sub, margin: "-8px 0 0", lineHeight: 1.4 },
   modalBtns: { display: "flex", gap: 10, marginTop: 4 },
